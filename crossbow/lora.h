@@ -16,80 +16,52 @@
 #define PA_OUTPUT_RFO_PIN      0
 #define PA_OUTPUT_PA_BOOST_PIN 1
 
+/*
 class LoRaClass {
 public:
   LoRaClass();
+*/
+int LoRa_begin(long frequency);
+void LoRa_end();
 
-  int begin(long frequency);
-  void end();
+int LoRa_beginPacket(int implicitHeader = false);
+int LoRa_endPacket();
 
-  int beginPacket(int implicitHeader = false);
-  int endPacket();
+void LoRa_endPacketAsync();
+bool LoRa_isTransmitting();
 
-  void endPacketAsync();
-  bool isTransmitting();
+int LoRa_parsePacket(int size = 0);
+int LoRa_packetRssi();
+float LoRa_packetSnr();
 
-  int parsePacket(int size = 0);
-  int packetRssi();
-  float packetSnr();
+void LoRa_write(uint8_t byte);
+void LoRa_write(uint8_t buffer[], size_t size);
+int LoRa_available();
+int LoRa_read();
+int LoRa_fastRead();
+void LoRa_read(uint8_t buffer[], uint8_t size);
 
-  void write(uint8_t byte);
-  void write(uint8_t buffer[], size_t size);
-  int available();
-  int read();
-  int fastRead();
-  void read(uint8_t buffer[], uint8_t size);
+void LoRa_onReceive(void(*callback)(int));
 
-  void onReceive(void(*callback)(int));
+void LoRa_receive(int size = 0);
+void LoRa_idle();
+void LoRa_sleep();
 
-  void receive(int size = 0);
-  void idle();
-  void sleep();
+void LoRa_setTxPower(int level, int outputPin = PA_OUTPUT_PA_BOOST_PIN);
+void LoRa_setFrequency(long frequency);
+void LoRa_setSpreadingFactor(int sf);
+void LoRa_setSignalBandwidth(long sbw);
+void LoRa_setCodingRate4(int denominator);
+void LoRa_setPreambleLength(long length);
+void LoRa_setSyncWord(int sw);
+void LoRa_enableCrc();
+void LoRa_disableCrc();
 
-  void setTxPower(int level, int outputPin = PA_OUTPUT_PA_BOOST_PIN);
-  void setFrequency(long frequency);
-  void setSpreadingFactor(int sf);
-  void setSignalBandwidth(long sbw);
-  void setCodingRate4(int denominator);
-  void setPreambleLength(long length);
-  void setSyncWord(int sw);
-  void enableCrc();
-  void disableCrc();
+byte LoRa_random();
 
-  byte random();
+void LoRa_setPins(int ss = LORA_DEFAULT_SS_PIN, int reset = LORA_DEFAULT_RESET_PIN, int dio0 = LORA_DEFAULT_DIO0_PIN);
+void LoRa_setSPIFrequency(uint32_t frequency);
 
-  void setPins(int ss = LORA_DEFAULT_SS_PIN, int reset = LORA_DEFAULT_RESET_PIN, int dio0 = LORA_DEFAULT_DIO0_PIN);
-  void setSPIFrequency(uint32_t frequency);
-
-  void dumpRegisters(Stream& out);
-
-private:
-  void explicitHeaderMode();
-  void implicitHeaderMode();
-
-  void handleDio0Rise();
-
-  uint8_t readRegister(uint8_t address);
-  void writeRegister(uint8_t address, uint8_t value);
-  uint8_t singleTransfer(uint8_t address, uint8_t value);
-
-  void readRegister(uint8_t address, uint8_t buffer[], size_t size);
-  void writeRegister(uint8_t address, uint8_t buffer[], size_t size);
-  void bufferTransfer(uint8_t address, uint8_t buffer[], uint8_t size);
-
-  static void onDio0Rise();
-
-private:
-  SPISettings _spiSettings;
-  int _ss;
-  int _reset;
-  int _dio0;
-  int _frequency;
-  int _packetIndex;
-  int _implicitHeaderMode;
-  void (*_onReceive)(int);
-};
-
-extern LoRaClass LoRa;
+void LoRa_dumpRegisters(Stream& out);
 
 #endif

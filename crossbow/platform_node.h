@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Arduino.h"
+#include "config.h"
 #include "radio_node.h"
-#ifdef ARDUINO_AVR_FEATHER32U4
+#if defined(ARDUINO_AVR_FEATHER32U4) || defined(ARDUINO_PRO_MICRO)
 #include <EEPROM.h>
 #elif defined(ARDUINO_SAMD_FEATHER_M0)
 // Include EEPROM-like API for FlashStorage

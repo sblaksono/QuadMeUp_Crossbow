@@ -52,79 +52,82 @@
 
 #define MAX_PKT_LENGTH           255
 
-LoRaClass::LoRaClass() :
-  _spiSettings(8E6, MSBFIRST, SPI_MODE0),
-  _ss(LORA_DEFAULT_SS_PIN), _reset(LORA_DEFAULT_RESET_PIN), _dio0(LORA_DEFAULT_DIO0_PIN),
-  _frequency(0),
-  _packetIndex(0),
-  _implicitHeaderMode(0),
-  _onReceive(NULL)
+SPISettings _spiSettings = SPISettings(8E6, MSBFIRST, SPI_MODE0);
+int _ss = LORA_DEFAULT_SS_PIN;
+int _reset = LORA_DEFAULT_RESET_PIN;
+int _dio0 = LORA_DEFAULT_DIO0_PIN;
+int _frequency = 0;
+int _packetIndex = 0;
+int _implicitHeaderMode = 0;
+void (*_onReceive)(int) = NULL;
+
+uint8_t singleTransfer(uint8_t address, uint8_t value)
 {
+  uint8_t response;
 
-}
+  digitalWrite(_ss, LOW);
 
-int LoRaClass::begin(long frequency)
-{
-  // setup pins
-  pinMode(_ss, OUTPUT);
-  pinMode(_reset, OUTPUT);
+  SPI.beginTransaction(_spiSettings);
+  SPI.transfer(address);
+  response = SPI.transfer(value);
+  SPI.endTransaction();
 
-  // perform reset
-  digitalWrite(_reset, LOW);
-  delay(10);
-  digitalWrite(_reset, HIGH);
-  delay(10);
-
-  // set SS high
   digitalWrite(_ss, HIGH);
 
-  // start SPI
-  SPI.begin();
-
-  // check version
-  uint8_t version = readRegister(REG_VERSION);
-  if (version != 0x12) {
-    return 0;
-  }
-
-  // put in sleep mode
-  sleep();
-
-  // set frequency
-  setFrequency(frequency);
-
-  // set base addresses
-  writeRegister(REG_FIFO_TX_BASE_ADDR, 0);
-  writeRegister(REG_FIFO_RX_BASE_ADDR, 0);
-
-  // set LNA boost
-  writeRegister(REG_LNA, readRegister(REG_LNA) | 0x03);
-
-  // set auto AGC
-  writeRegister(REG_MODEM_CONFIG_3, 0x04);
-
-  // set output power to 17 dBm
-  setTxPower(17);
-
-  // put in standby mode
-  idle();
-
-  return 1;
+  return response;
 }
 
-void LoRaClass::end()
+uint8_t readRegister(uint8_t address)
 {
-  // put in sleep mode
-  sleep();
-
-  // stop SPI
-  SPI.end();
+  return singleTransfer(address & 0x7f, 0x00);
 }
 
-int LoRaClass::beginPacket(int implicitHeader)
+void writeRegister(uint8_t address, uint8_t value)
+{
+  singleTransfer(address | 0x80, value);
+}
+
+void bufferTransfer(uint8_t address, uint8_t buffer[], uint8_t size) {
+  uint8_t response;
+
+  digitalWrite(_ss, LOW);
+
+  SPI.beginTransaction(_spiSettings);
+  SPI.transfer(address);
+  SPI.transfer(buffer, size);
+  SPI.endTransaction();
+
+  digitalWrite(_ss, HIGH);
+}
+
+void writeRegister(uint8_t address, uint8_t buffer[], size_t size)
+{
+  bufferTransfer(address | 0x80, buffer, size);
+}
+
+void readRegister(uint8_t address, uint8_t buffer[], size_t size)
+{
+  bufferTransfer(address & 0x7f, buffer, size);
+}
+
+void explicitHeaderMode()
+{
+  _implicitHeaderMode = 0;
+
+  writeRegister(REG_MODEM_CONFIG_1, readRegister(REG_MODEM_CONFIG_1) & 0xfe);
+}
+
+void implicitHeaderMode()
+{
+  _implicitHeaderMode = 1;
+
+  writeRegister(REG_MODEM_CONFIG_1, readRegister(REG_MODEM_CONFIG_1) | 0x01);
+}
+
+int LoRa_beginPacket(int implicitHeader)
 {
   // put in standby mode
-  idle();
+  LoRa_idle();
 
   if (implicitHeader) {
     implicitHeaderMode();
@@ -139,7 +142,7 @@ int LoRaClass::beginPacket(int implicitHeader)
   return 1;
 }
 
-int LoRaClass::endPacket()
+int LoRa_endPacket()
 {
   // put in TX mode
   writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_TX);
@@ -154,7 +157,7 @@ int LoRaClass::endPacket()
 }
 
 //https://github.com/sandeepmistry/arduino-LoRa/pull/62/files
-void LoRaClass::endPacketAsync()
+void LoRa_endPacketAsync()
 {
   // put in TX mode
   writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_TX);
@@ -164,7 +167,7 @@ void LoRaClass::endPacketAsync()
 }
 
 //https://github.com/sandeepmistry/arduino-LoRa/pull/62/files
-bool LoRaClass::isTransmitting()
+bool LoRa_isTransmitting()
 {
   if ((readRegister(REG_OP_MODE) & MODE_TX) == MODE_TX)
     return true;
@@ -174,9 +177,9 @@ bool LoRaClass::isTransmitting()
     writeRegister(REG_IRQ_FLAGS, IRQ_TX_DONE_MASK);
 
   return false;
-} 
+}
 
-int LoRaClass::parsePacket(int size)
+int LoRa_parsePacket(int size)
 {
   int packetLength = 0;
   int irqFlags = readRegister(REG_IRQ_FLAGS);
@@ -207,7 +210,7 @@ int LoRaClass::parsePacket(int size)
     writeRegister(REG_FIFO_ADDR_PTR, readRegister(REG_FIFO_RX_CURRENT_ADDR));
 
     // put in standby mode
-    idle();
+    LoRa_idle();
   } else if (readRegister(REG_OP_MODE) != (MODE_LONG_RANGE_MODE | MODE_RX_SINGLE)) {
     // not currently in RX mode
 
@@ -221,17 +224,17 @@ int LoRaClass::parsePacket(int size)
   return packetLength;
 }
 
-int LoRaClass::packetRssi()
+int LoRa_packetRssi()
 {
-  return (readRegister(REG_PKT_RSSI_VALUE) - (_frequency < 868E6 ? 164 : 157));
+  return (readRegister(REG_PKT_RSSI_VALUE) - (_frequency < 915000000 ? 164 : 157));
 }
 
-float LoRaClass::packetSnr()
+float LoRa_packetSnr()
 {
   return ((int8_t)readRegister(REG_PKT_SNR_VALUE)) * 0.25;
 }
 
-void LoRaClass::write(uint8_t data)
+void LoRa_write(uint8_t data)
 {
   int currentLength = readRegister(REG_PAYLOAD_LENGTH);
 
@@ -241,7 +244,7 @@ void LoRaClass::write(uint8_t data)
   writeRegister(REG_PAYLOAD_LENGTH, currentLength + 1);
 }
 
-void LoRaClass::write(uint8_t buffer[], size_t size)
+void LoRa_write(uint8_t buffer[], size_t size)
 {
   int currentLength = readRegister(REG_PAYLOAD_LENGTH);
 
@@ -256,32 +259,58 @@ void LoRaClass::write(uint8_t buffer[], size_t size)
   writeRegister(REG_PAYLOAD_LENGTH, currentLength + size);
 }
 
-int LoRaClass::available()
+int LoRa_available()
 {
   return (readRegister(REG_RX_NB_BYTES) - _packetIndex);
 }
 
-int LoRaClass::fastRead() {
+int LoRa_fastRead() {
   _packetIndex++;
-  
+
   return readRegister(REG_FIFO);
 }
 
-void LoRaClass::read(uint8_t buffer[], uint8_t size) {
+void LoRa_read(uint8_t buffer[], uint8_t size) {
   _packetIndex += size;
   return readRegister(REG_FIFO, buffer, size);
 }
 
-int LoRaClass::read()
+int LoRa_read()
 {
-  if (!available()) {
+  if (!LoRa_available()) {
     return -1;
   }
 
-  return fastRead();
+  return LoRa_fastRead();
 }
 
-void LoRaClass::onReceive(void(*callback)(int))
+void LoRa_handleDio0Rise()
+{
+  int irqFlags = readRegister(REG_IRQ_FLAGS);
+
+  // clear IRQ's
+  writeRegister(REG_IRQ_FLAGS, irqFlags);
+
+  if ((irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) == 0) {
+    // received a packet
+    _packetIndex = 0;
+
+    // read packet length
+    int packetLength = _implicitHeaderMode ? readRegister(REG_PAYLOAD_LENGTH) : readRegister(REG_RX_NB_BYTES);
+
+    // set FIFO address to current RX address
+    writeRegister(REG_FIFO_ADDR_PTR, readRegister(REG_FIFO_RX_CURRENT_ADDR));
+
+    if (_onReceive) {
+      _onReceive(packetLength);
+    }
+
+    // reset FIFO address
+    writeRegister(REG_FIFO_ADDR_PTR, 0);
+  }
+}
+
+void LoRa_onReceive(void(*callback)(int))
 {
   _onReceive = callback;
 
@@ -290,7 +319,7 @@ void LoRaClass::onReceive(void(*callback)(int))
 
     writeRegister(REG_DIO_MAPPING_1, 0x00);
     SPI.usingInterrupt(digitalPinToInterrupt(_dio0));
-    attachInterrupt(digitalPinToInterrupt(_dio0), LoRaClass::onDio0Rise, RISING);
+    attachInterrupt(digitalPinToInterrupt(_dio0), LoRa_handleDio0Rise, RISING);
   } else {
     detachInterrupt(digitalPinToInterrupt(_dio0));
 #ifdef SPI_HAS_NOTUSINGINTERRUPT
@@ -299,7 +328,7 @@ void LoRaClass::onReceive(void(*callback)(int))
   }
 }
 
-void LoRaClass::receive(int size)
+void LoRa_receive(int size)
 {
   if (size > 0) {
     implicitHeaderMode();
@@ -312,17 +341,17 @@ void LoRaClass::receive(int size)
   writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS);
 }
 
-void LoRaClass::idle()
+void LoRa_idle()
 {
   writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_STDBY);
 }
 
-void LoRaClass::sleep()
+void LoRa_sleep()
 {
   writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_SLEEP);
 }
 
-void LoRaClass::setTxPower(int level, int outputPin)
+void LoRa_setTxPower(int level, int outputPin)
 {
   if (PA_OUTPUT_RFO_PIN == outputPin) {
     // RFO
@@ -345,7 +374,7 @@ void LoRaClass::setTxPower(int level, int outputPin)
   }
 }
 
-void LoRaClass::setFrequency(long frequency)
+void LoRa_setFrequency(long frequency)
 {
   _frequency = frequency;
 
@@ -356,7 +385,7 @@ void LoRaClass::setFrequency(long frequency)
   writeRegister(REG_FRF_LSB, (uint8_t)(frf >> 0));
 }
 
-void LoRaClass::setSpreadingFactor(int sf)
+void LoRa_setSpreadingFactor(int sf)
 {
   if (sf < 6) {
     sf = 6;
@@ -375,7 +404,7 @@ void LoRaClass::setSpreadingFactor(int sf)
   writeRegister(REG_MODEM_CONFIG_2, (readRegister(REG_MODEM_CONFIG_2) & 0x0f) | ((sf << 4) & 0xf0));
 }
 
-void LoRaClass::setSignalBandwidth(long sbw)
+void LoRa_setSignalBandwidth(long sbw)
 {
   int bw;
 
@@ -404,7 +433,7 @@ void LoRaClass::setSignalBandwidth(long sbw)
   writeRegister(REG_MODEM_CONFIG_1, (readRegister(REG_MODEM_CONFIG_1) & 0x0f) | (bw << 4));
 }
 
-void LoRaClass::setCodingRate4(int denominator)
+void LoRa_setCodingRate4(int denominator)
 {
   if (denominator < 5) {
     denominator = 5;
@@ -417,45 +446,45 @@ void LoRaClass::setCodingRate4(int denominator)
   writeRegister(REG_MODEM_CONFIG_1, (readRegister(REG_MODEM_CONFIG_1) & 0xf1) | (cr << 1));
 }
 
-void LoRaClass::setPreambleLength(long length)
+void LoRa_setPreambleLength(long length)
 {
   writeRegister(REG_PREAMBLE_MSB, (uint8_t)(length >> 8));
   writeRegister(REG_PREAMBLE_LSB, (uint8_t)(length >> 0));
 }
 
-void LoRaClass::setSyncWord(int sw)
+void LoRa_setSyncWord(int sw)
 {
   writeRegister(REG_SYNC_WORD, sw);
 }
 
-void LoRaClass::enableCrc()
+void LoRa_enableCrc()
 {
   writeRegister(REG_MODEM_CONFIG_2, readRegister(REG_MODEM_CONFIG_2) | 0x04);
 }
 
-void LoRaClass::disableCrc()
+void LoRa_disableCrc()
 {
   writeRegister(REG_MODEM_CONFIG_2, readRegister(REG_MODEM_CONFIG_2) & 0xfb);
 }
 
-byte LoRaClass::random()
+byte LoRa_random()
 {
   return readRegister(REG_RSSI_WIDEBAND);
 }
 
-void LoRaClass::setPins(int ss, int reset, int dio0)
+void LoRa_setPins(int ss, int reset, int dio0)
 {
   _ss = ss;
   _reset = reset;
   _dio0 = dio0;
 }
 
-void LoRaClass::setSPIFrequency(uint32_t frequency)
+void LoRa_setSPIFrequency(uint32_t frequency)
 {
   _spiSettings = SPISettings(frequency, MSBFIRST, SPI_MODE0);
 }
 
-void LoRaClass::dumpRegisters(Stream& out)
+void LoRa_dumpRegisters(Stream& out)
 {
   for (int i = 0; i < 128; i++) {
     out.print("0x");
@@ -465,98 +494,60 @@ void LoRaClass::dumpRegisters(Stream& out)
   }
 }
 
-void LoRaClass::explicitHeaderMode()
+int LoRa_begin(long frequency)
 {
-  _implicitHeaderMode = 0;
+  // setup pins
+  pinMode(_ss, OUTPUT);
+  pinMode(_reset, OUTPUT);
 
-  writeRegister(REG_MODEM_CONFIG_1, readRegister(REG_MODEM_CONFIG_1) & 0xfe);
-}
+  // perform reset
+  digitalWrite(_reset, LOW);
+  delay(10);
+  digitalWrite(_reset, HIGH);
+  delay(10);
 
-void LoRaClass::implicitHeaderMode()
-{
-  _implicitHeaderMode = 1;
-
-  writeRegister(REG_MODEM_CONFIG_1, readRegister(REG_MODEM_CONFIG_1) | 0x01);
-}
-
-void LoRaClass::handleDio0Rise()
-{
-  int irqFlags = readRegister(REG_IRQ_FLAGS);
-
-  // clear IRQ's
-  writeRegister(REG_IRQ_FLAGS, irqFlags);
-
-  if ((irqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) == 0) {
-    // received a packet
-    _packetIndex = 0;
-
-    // read packet length
-    int packetLength = _implicitHeaderMode ? readRegister(REG_PAYLOAD_LENGTH) : readRegister(REG_RX_NB_BYTES);
-
-    // set FIFO address to current RX address
-    writeRegister(REG_FIFO_ADDR_PTR, readRegister(REG_FIFO_RX_CURRENT_ADDR));
-
-    if (_onReceive) {
-      _onReceive(packetLength);
-    }
-
-    // reset FIFO address
-    writeRegister(REG_FIFO_ADDR_PTR, 0);
-  }
-}
-
-uint8_t LoRaClass::readRegister(uint8_t address)
-{
-  return singleTransfer(address & 0x7f, 0x00);
-}
-
-void LoRaClass::writeRegister(uint8_t address, uint8_t value)
-{
-  singleTransfer(address | 0x80, value);
-}
-
-uint8_t LoRaClass::singleTransfer(uint8_t address, uint8_t value)
-{
-  uint8_t response;
-
-  digitalWrite(_ss, LOW);
-
-  SPI.beginTransaction(_spiSettings);
-  SPI.transfer(address);
-  response = SPI.transfer(value);
-  SPI.endTransaction();
-
+  // set SS high
   digitalWrite(_ss, HIGH);
 
-  return response;
+  // start SPI
+  SPI.begin();
+
+  // check version
+  uint8_t version = readRegister(REG_VERSION);
+  if (version != 0x12) {
+    return 0;
+  }
+
+  // put in sleep mode
+  LoRa_sleep();
+
+  // set frequency
+  LoRa_setFrequency(frequency);
+
+  // set base addresses
+  writeRegister(REG_FIFO_TX_BASE_ADDR, 0);
+  writeRegister(REG_FIFO_RX_BASE_ADDR, 0);
+
+  // set LNA boost
+  writeRegister(REG_LNA, readRegister(REG_LNA) | 0x03);
+
+  // set auto AGC
+  writeRegister(REG_MODEM_CONFIG_3, 0x04);
+
+  // set output power to 17 dBm
+  LoRa_setTxPower(17);
+
+  // put in standby mode
+  LoRa_idle();
+
+  return 1;
 }
 
-void LoRaClass::writeRegister(uint8_t address, uint8_t buffer[], size_t size)
+void LoRa_end()
 {
-  bufferTransfer(address | 0x80, buffer, size);
+  // put in sleep mode
+  LoRa_sleep();
+
+  // stop SPI
+  SPI.end();
 }
-
-void LoRaClass::readRegister(uint8_t address, uint8_t buffer[], size_t size)
-{
-  bufferTransfer(address & 0x7f, buffer, size);
-}
-
-void LoRaClass::bufferTransfer(uint8_t address, uint8_t buffer[], uint8_t size) {
-  uint8_t response;
-  
-  digitalWrite(_ss, LOW);
-
-  SPI.beginTransaction(_spiSettings);
-  SPI.transfer(address);
-  SPI.transfer(buffer, size);
-  SPI.endTransaction();
-
-  digitalWrite(_ss, HIGH); 
-}
-
-void LoRaClass::onDio0Rise()
-{
-  LoRa.handleDio0Rise();
-}
-
-LoRaClass LoRa;

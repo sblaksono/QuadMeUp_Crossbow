@@ -8,14 +8,14 @@
  * 
  *  Leave commented for autodetect
  */
-// #define ARDUINO_AVR_FEATHER32U4
-
+//#define ARDUINO_AVR_FEATHER32U4
+#define ARDUINO_PRO_MICRO
 /*
  * TX or RX mode for hardware. Available types:
  * DEVICE_MODE_TX
  * DEVICE_MODE_RX
  */
-// #define DEVICE_MODE_TX
+//#define DEVICE_MODE_TX
 #define DEVICE_MODE_RX
 
 #define FEATURE_TX_OLED
