@@ -5,7 +5,6 @@
 
 #include "Wire.h"
 #include <U8x8lib.h>
-#include "variables.h"
 #include "tactile.h"
 #include "crossbow.h"
 

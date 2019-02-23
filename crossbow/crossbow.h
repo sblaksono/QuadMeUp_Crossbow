@@ -2,8 +2,15 @@
 #define CROSSBOW_H
 
 #include "qsp.h"
-#include "variables.h"
 #include "config.h"
+
+#define TX_TRANSMIT_SLOT_RATE 67 //ms
+#define RX_CHANNEL_DWELL_TIME (TX_TRANSMIT_SLOT_RATE + 10) //Dwell on a channel slightly longer
+#define RX_FAILSAFE_DELAY (TX_TRANSMIT_SLOT_RATE * 8)
+#define TX_FAILSAFE_DELAY (RX_FAILSAFE_DELAY * 4)
+
+#define RADIO_STATE_TX 1
+#define RADIO_STATE_RX 2
 
 extern volatile uint8_t RadioNode_radioState;
 extern uint8_t RadioNode_rssi;

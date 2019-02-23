@@ -1,4 +1,3 @@
-
 #ifndef SBUS_INPUT
 #define SBUS_INPUT
 
@@ -32,4 +31,3 @@ class SbusInput : public TxInput
 void sbusPreparePacket(uint8_t packet[], bool isSignalLoss, bool isFailsafe, int (* rcChannelGetCallback)(uint8_t));
 
 #endif
-

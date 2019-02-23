@@ -1,11 +1,23 @@
 #include "config.h"
 #include "board.h"
 #include "lora.h"
-#include "variables.h"
-#include "main_variables.h"
 #include "qsp.h"
 #include "sbus.h"
 #include "crossbow.h"
+
+#define SBUS_UPDATE_RATE 15 //ms
+#define SBUS_PACKET_LENGTH 25
+
+#define RC_CHANNEL_MIN 990
+#define RC_CHANNEL_MAX 2010
+
+#define RX_TASK_HEALTH 200 //5Hz should be enough
+#define RSSI_CHANNEL 11
+
+#define MIN_PACKET_SIZE 3 //Min theorethical size of valid packet
+#define MAX_PACKET_SIZE 20 //Max theorethical size of valid packet
+
+#define NO_DATA_TO_READ -1
 
 /*
  * Main defines for device working in TX mode
@@ -82,6 +94,44 @@ bool PlatformNode_isBindMode = false;
 uint32_t bindModeExitMillis;
 
 volatile int _channels[PLATFORM_TOTAL_CHANNEL_COUNT];
+
+int8_t txSendSequence[16] = {
+    QSP_FRAME_PING,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA,
+    QSP_FRAME_RC_DATA
+};
+
+int8_t rxSendSequence[16] = {
+    QSP_FRAME_RX_HEALTH,
+    -1,
+    -1,
+    -1,
+    QSP_FRAME_RX_HEALTH,
+    -1,
+    -1,
+    -1,
+    QSP_FRAME_RX_HEALTH,
+    -1,
+    -1,
+    -1,
+    QSP_FRAME_RX_HEALTH,
+    -1,
+    -1,
+    -1
+};
 
 uint32_t getFrequencyForChannel(uint8_t channel) {
     return RADIO_FREQUENCY_MIN + (RADIO_CHANNEL_WIDTH * channel);

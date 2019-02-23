@@ -81,6 +81,12 @@
     #error please select hardware
 #endif
 
+#define RX_ADC_PIN_1 A0
+#define RX_ADC_PIN_2 A1
+#define RX_ADC_PIN_3 A2
+
+#define TX_BUZZER_PIN A5
+
 
 
 #endif // _BOARD_H_
