@@ -1,7 +1,12 @@
-#ifndef SBUS_INPUT
-#define SBUS_INPUT
+#ifndef SBUS_H
+#define SBUS_H
 
-#include "Arduino.h"
+#include <stdint.h>
+
+#include "config.h"
+
+#ifdef FEATURE_TX_INPUT_SBUS
+
 #include "tx_input.h"
 
 enum sbusProtocolStates {
@@ -27,6 +32,9 @@ class SbusInput : public TxInput
 	  void sbusRead(void);
     void sbusToChannels(byte buffer[]);
 };
+
+
+#endif
 
 void sbusPreparePacket(uint8_t packet[], bool isSignalLoss, bool isFailsafe, int (* rcChannelGetCallback)(uint8_t));
 

@@ -1,4 +1,3 @@
-#include "Arduino.h"
 #include "sbus.h"
 
 #define SBUS_MIN_OFFSET 173
@@ -16,7 +15,7 @@
 
 /*
 Precomputed mapping from 990-2010 to 173:1811
-equivalent to 
+equivalent to
 map(channels[i], RC_CHANNEL_MIN, RC_CHANNEL_MAX, SBUS_MIN_OFFSET, SBUS_MAX_OFFSET);
 */
 int mapChannelToSbus(int in) {
@@ -31,9 +30,9 @@ int mapSbusToChannel(int in) {
 }
 
 void sbusPreparePacket(uint8_t packet[], bool isSignalLoss, bool isFailsafe, int (* rcChannelGetCallback)(uint8_t)) {
-    
+
     int output[SBUS_CHANNEL_NUMBER];
-    
+
     /*
      * Map 1000-2000 with middle at 1500 chanel values to
      * 173-1811 with middle at 992 S.BUS protocol requires
@@ -50,7 +49,7 @@ void sbusPreparePacket(uint8_t packet[], bool isSignalLoss, bool isFailsafe, int
         stateByte |= SBUS_STATE_FAILSAFE;
     }
     packet[0] = SBUS_FRAME_HEADER; //Header
-    
+
     packet[1] = (uint8_t) (output[0] & 0x07FF);
     packet[2] = (uint8_t) ((output[0] & 0x07FF)>>8 | (output[1] & 0x07FF)<<3);
     packet[3] = (uint8_t) ((output[1] & 0x07FF)>>5 | (output[2] & 0x07FF)<<6);
@@ -64,7 +63,7 @@ void sbusPreparePacket(uint8_t packet[], bool isSignalLoss, bool isFailsafe, int
     packet[11] = (uint8_t) ((output[7] & 0x07FF)>>3);
     packet[12] = (uint8_t) ((output[8] & 0x07FF));
     packet[13] = (uint8_t) ((output[8] & 0x07FF)>>8 | (output[9] & 0x07FF)<<3);
-    packet[14] = (uint8_t) ((output[9] & 0x07FF)>>5 | (output[10] & 0x07FF)<<6);  
+    packet[14] = (uint8_t) ((output[9] & 0x07FF)>>5 | (output[10] & 0x07FF)<<6);
     packet[15] = (uint8_t) ((output[10] & 0x07FF)>>2);
     packet[16] = (uint8_t) ((output[10] & 0x07FF)>>10 | (output[11] & 0x07FF)<<1);
     packet[17] = (uint8_t) ((output[11] & 0x07FF)>>7 | (output[12] & 0x07FF)<<4);
@@ -73,10 +72,12 @@ void sbusPreparePacket(uint8_t packet[], bool isSignalLoss, bool isFailsafe, int
     packet[20] = (uint8_t) ((output[13] & 0x07FF)>>9 | (output[14] & 0x07FF)<<2);
     packet[21] = (uint8_t) ((output[14] & 0x07FF)>>6 | (output[15] & 0x07FF)<<5);
     packet[22] = (uint8_t) ((output[15] & 0x07FF)>>3);
-    
+
     packet[23] = stateByte; //Flags byte
     packet[24] = SBUS_FRAME_FOOTER; //Footer
 }
+
+#ifdef FEATURE_TX_INPUT_SBUS
 
 SbusInput::SbusInput(HardwareSerial &serial) : _serial(serial)
 {
@@ -95,7 +96,7 @@ void SbusInput::start(void)
 }
 
 void SbusInput::restart(void)
-{   
+{
     _serial.end();
     start();
 }
@@ -148,13 +149,13 @@ void SbusInput::sbusRead() {
                 buffer_index = 0;
                 _protocolState = SBUS_DECODING_STATE_IN_PROGRESS;
             }
-        } 
+        }
 
         buffer[buffer_index] = rx;
         buffer_index++;
 
         if (
-            _protocolState == SBUS_DECODING_STATE_IN_PROGRESS && 
+            _protocolState == SBUS_DECODING_STATE_IN_PROGRESS &&
             buffer_index == 25 &&
             buffer[24] == SBUS_FRAME_FOOTER
         ) {
@@ -169,3 +170,5 @@ void SbusInput::sbusRead() {
 bool SbusInput::isReceiving() {
     return  !(millis() - _frameDecodingEndedAt > SBUS_IS_RECEIVING_THRESHOLD);
 }
+
+#endif

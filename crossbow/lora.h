@@ -6,7 +6,6 @@
 #ifndef LORA_H
 #define LORA_H
 
-#include <Arduino.h>
 #include <SPI.h>
 
 #define LORA_DEFAULT_SS_PIN    10

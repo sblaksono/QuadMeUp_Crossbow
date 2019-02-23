@@ -1,7 +1,8 @@
 #ifndef QSP_H
 #define QSP_H
 
-#include "Arduino.h"
+#include <stdint.h>
+
 #include "config.h"
 
 #define QSP_PAYLOAD_LENGTH 32

@@ -2,7 +2,6 @@
 #include "board.h"
 #include "lora.h"
 #include "qsp.h"
-#include "sbus.h"
 #include "crossbow.h"
 
 #define SBUS_UPDATE_RATE 15 //ms
@@ -25,10 +24,12 @@
 #ifdef DEVICE_MODE_TX
 
 #ifdef FEATURE_TX_INPUT_PPM
+
   #include "ppm_reader.h"
   PPM_Reader txInput(PPM_INPUT_PIN, true);
 
 #elif defined(FEATURE_TX_INPUT_SBUS)
+
   #include "sbus.h"
   SbusInput txInput(Serial1);
 
@@ -56,9 +57,18 @@ Tactile button1(BUTTON_1_PIN);
  * Main defines for device working in RX mode
  */
 #ifdef DEVICE_MODE_RX
-    uint32_t sbusTime = 0;
-    uint8_t sbusPacket[SBUS_PACKET_LENGTH] = {0};
-    uint32_t lastRxStateTaskTime = 0;
+
+#ifdef FEATURE_RX_OUTPUT_SBUS
+
+#include "sbus.h"
+
+uint32_t sbusTime = 0;
+uint8_t sbusPacket[SBUS_PACKET_LENGTH] = {0};
+
+#endif
+
+uint32_t lastRxStateTaskTime = 0;
+
 #endif
 
 
@@ -814,6 +824,7 @@ void Crossbow_loop()
 
     }
 
+#ifdef FEATURE_RX_OUTPUT_SBUS
     if (currentMillis > sbusTime) {
         setRcChannel(RSSI_CHANNEL - 1, rxDeviceState.indicatedRssi, 0);
 
@@ -821,6 +832,7 @@ void Crossbow_loop()
         Serial1.write(sbusPacket, SBUS_PACKET_LENGTH);
         sbusTime = currentMillis + SBUS_UPDATE_RATE;
     }
+#endif
 
     if (qsp.lastFrameReceivedAt[QSP_FRAME_RC_DATA] + RX_FAILSAFE_DELAY < currentMillis) {
         PlatformNode_platformState = DEVICE_STATE_FAILSAFE;

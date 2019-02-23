@@ -1,4 +1,3 @@
-#include "Arduino.h"
 #include "qsp.h"
 
 void qspDecodeRcDataFrame(QspConfiguration_t *qsp, RxDeviceState_t *rxDeviceSate) {
@@ -75,7 +74,7 @@ void encodeRcDataPayload(QspConfiguration_t *qsp, uint8_t noOfChannels)
 {
     for (uint8_t i = 0; i < noOfChannels; i++)
     {
-        int cV = constrain(qsp->rcChannelGetCallback(i), 1000, 2000) - 1000;
+        int cV = _CONSTRAIN(qsp->rcChannelGetCallback(i), 1000, 2000) - 1000;
 
         uint16_t channelValue10 = cV & 0x03ff;
         uint8_t channelValue8   = (cV >> 2) & 0xff;
@@ -102,19 +101,19 @@ void encodeRcDataPayload(QspConfiguration_t *qsp, uint8_t noOfChannels)
             /*
              * And last 4 with 4 bits per channel
              */
-            qsp->payload[7] |= (channelValue4 << 4) & B11110000;
+            qsp->payload[7] |= (channelValue4 << 4) & 0b11110000;
         }
         else if (i == 7)
         {
-            qsp->payload[7] |= channelValue4 & B00001111;
+            qsp->payload[7] |= channelValue4 & 0b00001111;
         }
         else if (i == 8)
         {
-            qsp->payload[8] |= (channelValue4 << 4) & B11110000;
+            qsp->payload[8] |= (channelValue4 << 4) & 0b11110000;
         }
         else if (i == 9)
         {
-            qsp->payload[8] |= channelValue4 & B00001111;
+            qsp->payload[8] |= channelValue4 & 0b00001111;
         }
     }
 
@@ -157,7 +156,7 @@ void qspDecodeIncomingFrame(
         qspInitCrc(qsp, bindKey);
         qspClearPayload(qsp);
         receivedPayload = 0;
-        qsp->frameDecodingStartedAt = millis();
+        qsp->frameDecodingStartedAt = _MILLIS();
 
         //Frame ID and payload length
         qspComputeCrc(qsp, incomingByte);

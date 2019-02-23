@@ -6,7 +6,6 @@
 #ifndef _BOARD_H_
 #define _BOARD_H_
 
-#include <Arduino.h>
 #include <avr/io.h>
 
 #include "config.h"
@@ -86,6 +85,8 @@
 #define RX_ADC_PIN_3 A2
 
 #define TX_BUZZER_PIN A5
+
+#define PPM_INPUT_PIN       0 // Has to be one of Interrupt pins
 
 
 

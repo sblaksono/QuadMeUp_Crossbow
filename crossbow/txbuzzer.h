@@ -1,6 +1,7 @@
-#pragma once
+#ifndef TXBUZZER_H
+#define TXBUZZER_H
 
-#include "Arduino.h"
+#include <stdint.h>
 
 #define PATTERN_CYCLE_OFF 127
 #define PATTERN_CYCLE_ON -1
@@ -44,3 +45,5 @@ struct BuzzerState_t {
 void buzzerSingleMode(uint8_t mode, BuzzerState_t *buzzer);
 void buzzerContinousMode(uint8_t mode, BuzzerState_t *buzzer);
 void buzzerProcess(uint8_t pin, uint32_t timestamp, BuzzerState_t *buzzer);
+
+#endif
