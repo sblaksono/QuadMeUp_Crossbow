@@ -200,15 +200,7 @@ void RadioNode_reset(void) {
     );
 }
 
-void RadioNode_init(uint8_t ss, uint8_t rst, uint8_t di0, void(*callback)(int)) {
-    /*
-     * Setup hardware
-     */
-    LoRa_setPins(
-        ss,
-        rst,
-        di0
-    );
+void RadioNode_init(void(*callback)(int)) {
 
     if (!LoRa_begin(getFrequencyForChannel(getChannel()))) {
         while (true);
@@ -534,7 +526,7 @@ void Crossbow_setup()
 
 #endif
 
-    RadioNode_init(LORA_SS_PIN, LORA_RST_PIN, LORA_DI0_PIN, Crossbow_onReceive);
+    RadioNode_init(Crossbow_onReceive);
 
 #ifdef DEVICE_MODE_RX
 

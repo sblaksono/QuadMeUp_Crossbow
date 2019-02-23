@@ -59,7 +59,13 @@
 #define PPM_OUTPUT_PIN 10  //set PPM signal output pin on the arduino
 
 
+#define _RANDOM_SEED()            randomSeed(analogRead(A4))
+#define _RANDOM(A, B)             random(A, B)
+
+#define _DELAY(X)                 delay(X)
+#define _DELAYMS(X)               delayMicroseconds(X)
 #define _MILLIS()                 millis()
+#define _MICROS()                 micros()
 
 #define _CONSTRAIN(X, A, B)       ( (X) < (A) ? (A) : ( (X) > (B) ? (B) : (X) ) )
 

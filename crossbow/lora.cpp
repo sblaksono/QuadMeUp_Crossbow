@@ -3,8 +3,13 @@
   https://github.com/sandeepmistry/arduino-LoRa
 */
 
+#include <avr/interrupt.h>
+#include <avr/io.h>
+
 #include "lora.h"
 #include "config.h"
+#include "board.h"
+#include "rf_spi.h"
 
 // registers
 #define REG_FIFO                 0x00
@@ -53,27 +58,24 @@
 
 #define MAX_PKT_LENGTH           255
 
-SPISettings _spiSettings = SPISettings(8E6, MSBFIRST, SPI_MODE0);
-int _ss = LORA_DEFAULT_SS_PIN;
-int _reset = LORA_DEFAULT_RESET_PIN;
-int _dio0 = LORA_DEFAULT_DIO0_PIN;
 int _frequency = 0;
 int _packetIndex = 0;
 int _implicitHeaderMode = 0;
 void (*_onReceive)(int) = NULL;
 
+
 uint8_t singleTransfer(uint8_t address, uint8_t value)
 {
   uint8_t response;
 
-  digitalWrite(_ss, LOW);
+  LORA_SS_LOW();
 
-  SPI.beginTransaction(_spiSettings);
-  SPI.transfer(address);
-  response = SPI.transfer(value);
-  SPI.endTransaction();
+  rf_spi_transaction_begin();
+  rf_spi_xfer(address);
+  response = rf_spi_xfer(value);
+  rf_spi_transaction_end();
 
-  digitalWrite(_ss, HIGH);
+  LORA_SS_HIGH();
 
   return response;
 }
@@ -91,22 +93,22 @@ void writeRegister(uint8_t address, uint8_t value)
 void bufferTransfer(uint8_t address, uint8_t buffer[], uint8_t size) {
   uint8_t response;
 
-  digitalWrite(_ss, LOW);
+  LORA_SS_LOW();
 
-  SPI.beginTransaction(_spiSettings);
-  SPI.transfer(address);
-  SPI.transfer(buffer, size);
-  SPI.endTransaction();
+  rf_spi_transaction_begin();
+  rf_spi_xfer(address);
+  rf_spi_buffer_xfer(buffer, size);
+  rf_spi_transaction_end();
 
-  digitalWrite(_ss, HIGH);
+  LORA_SS_HIGH();
 }
 
-void writeRegister(uint8_t address, uint8_t buffer[], size_t size)
+void writeRegister(uint8_t address, uint8_t buffer[], uint8_t size)
 {
   bufferTransfer(address | 0x80, buffer, size);
 }
 
-void readRegister(uint8_t address, uint8_t buffer[], size_t size)
+void readRegister(uint8_t address, uint8_t buffer[], uint8_t size)
 {
   bufferTransfer(address & 0x7f, buffer, size);
 }
@@ -245,7 +247,7 @@ void LoRa_write(uint8_t data)
   writeRegister(REG_PAYLOAD_LENGTH, currentLength + 1);
 }
 
-void LoRa_write(uint8_t buffer[], size_t size)
+void LoRa_write(uint8_t buffer[], uint8_t size)
 {
   int currentLength = readRegister(REG_PAYLOAD_LENGTH);
 
@@ -285,8 +287,13 @@ int LoRa_read()
   return LoRa_fastRead();
 }
 
-void LoRa_handleDio0Rise()
-{
+#if defined(LORA_DIO0_INT0)
+ISR(INT0_vect) {
+#elif defined(LORA_DIO0_INT1)
+ISR(INT1_vect) {
+#elif defined(LORA_DIO0_INT6)
+ISR(INT6_vect) {
+#endif
   int irqFlags = readRegister(REG_IRQ_FLAGS);
 
   // clear IRQ's
@@ -316,16 +323,14 @@ void LoRa_onReceive(void(*callback)(int))
   _onReceive = callback;
 
   if (callback) {
-    pinMode(_dio0, INPUT);
+    SET_LORA_DIO0_PIN_MODE();
 
     writeRegister(REG_DIO_MAPPING_1, 0x00);
-    SPI.usingInterrupt(digitalPinToInterrupt(_dio0));
-    attachInterrupt(digitalPinToInterrupt(_dio0), LoRa_handleDio0Rise, RISING);
+    rf_spi_using_interrupt();
+    ENABLE_LORA_INT_RISING();
   } else {
-    detachInterrupt(digitalPinToInterrupt(_dio0));
-#ifdef SPI_HAS_NOTUSINGINTERRUPT
-    SPI.notUsingInterrupt(digitalPinToInterrupt(_dio0));
-#endif
+    DISABLE_LORA_INT();
+    rf_spi_no_interrupt();
   }
 }
 
@@ -468,50 +473,28 @@ void LoRa_disableCrc()
   writeRegister(REG_MODEM_CONFIG_2, readRegister(REG_MODEM_CONFIG_2) & 0xfb);
 }
 
-byte LoRa_random()
+uint8_t LoRa_random()
 {
   return readRegister(REG_RSSI_WIDEBAND);
-}
-
-void LoRa_setPins(int ss, int reset, int dio0)
-{
-  _ss = ss;
-  _reset = reset;
-  _dio0 = dio0;
-}
-
-void LoRa_setSPIFrequency(uint32_t frequency)
-{
-  _spiSettings = SPISettings(frequency, MSBFIRST, SPI_MODE0);
-}
-
-void LoRa_dumpRegisters(Stream& out)
-{
-  for (int i = 0; i < 128; i++) {
-    out.print("0x");
-    out.print(i, HEX);
-    out.print(": 0x");
-    out.println(readRegister(i), HEX);
-  }
 }
 
 int LoRa_begin(long frequency)
 {
   // setup pins
-  pinMode(_ss, OUTPUT);
-  pinMode(_reset, OUTPUT);
+  SET_LORA_SS_PIN_MODE();
+  SET_LORA_RST_PIN_MODE();
 
   // perform reset
-  digitalWrite(_reset, LOW);
-  delay(10);
-  digitalWrite(_reset, HIGH);
-  delay(10);
+  LORA_RST_LOW();
+  _DELAY(10);
+  LORA_RST_HIGH();
+  _DELAY(10);
 
   // set SS high
-  digitalWrite(_ss, HIGH);
+  LORA_SS_HIGH();
 
   // start SPI
-  SPI.begin();
+  rf_spi_enable_master_mode();
 
   // check version
   uint8_t version = readRegister(REG_VERSION);
@@ -550,5 +533,5 @@ void LoRa_end()
   LoRa_sleep();
 
   // stop SPI
-  SPI.end();
+  rf_spi_disable();
 }
