@@ -25,10 +25,10 @@ void TxOled::loop() {
         case TX_PAGE_BIND:
             if (button1.getState() == TACTILE_STATE_LONG_PRESS) {
 
-                if (!platformNode.isBindMode) {
-                    platformNode.enterBindMode();
+                if (!PlatformNode_isBindMode) {
+                    PlatformNode_enterBindMode();
                 } else {
-                    platformNode.leaveBindMode();
+                    PlatformNode_leaveBindMode();
                 }
                 update = true;
             }
@@ -95,7 +95,7 @@ void TxOled::renderPagePwr() {
     _display.clear();
     _display.draw1x2String(0, 0, "Power");
 
-    snprintf(buf, OLED_COL_COUNT, "%d%s", radioNode.loraTxPower, "dBm");
+    snprintf(buf, OLED_COL_COUNT, "%d%s", RadioNode_loraTxPower, "dBm");
     _display.draw1x2String(0, 4, buf);
 }
 
@@ -105,7 +105,7 @@ void TxOled::renderPageBind() {
     _display.clear();
     _display.draw1x2String(0, 0, "Bind");
 
-    if (platformNode.isBindMode) {
+    if (PlatformNode_isBindMode) {
         snprintf(buf, OLED_COL_COUNT, "Binding!!");
     } else {
         snprintf(buf, OLED_COL_COUNT, "Bind?");
@@ -134,12 +134,12 @@ void TxOled::renderPageStats() {
     _display.drawString(0, 3, "RSSI");
     _display.drawString(0, 5, "SNR");
     
-    snprintf(buf, OLED_COL_COUNT, "%d", radioNode.rssi);
+    snprintf(buf, OLED_COL_COUNT, "%d", RadioNode_rssi);
     _display.drawString(6, 3, buf);
     snprintf(buf, OLED_COL_COUNT, "%d", rxDeviceState.rssi);
     _display.drawString(11, 3, buf);
 
-    snprintf(buf, OLED_COL_COUNT, "%d", radioNode.snr);
+    snprintf(buf, OLED_COL_COUNT, "%d", RadioNode_snr);
     _display.drawString(6, 5, buf);
     snprintf(buf, OLED_COL_COUNT, "%d", rxDeviceState.snr);
     _display.drawString(11, 5, buf);
@@ -154,21 +154,18 @@ void TxOled::renderPageInit() {
 
     _display.clear();
 
-    snprintf(buf, OLED_COL_COUNT, "Rdy %d %s", radioNode.loraTxPower, "dBm");
+    snprintf(buf, OLED_COL_COUNT, "Rdy %d %s", RadioNode_loraTxPower, "dBm");
     _display.draw1x2String(0, 0, buf);
 
-    snprintf(buf, OLED_COL_COUNT, "BW %dkHz", radioNode.loraBandwidth / 1000);
+    snprintf(buf, OLED_COL_COUNT, "BW %dkHz", RadioNode_loraBandwidth / 1000);
     _display.drawString(0, 4, buf);
 
-    snprintf(buf, OLED_COL_COUNT, "SF %d", radioNode.loraSpreadingFactor);
+    snprintf(buf, OLED_COL_COUNT, "SF %d", RadioNode_loraSpreadingFactor);
     _display.drawString(0, 5, buf);
 
-    snprintf(buf, OLED_COL_COUNT, "CR %d", radioNode.loraCodingRate);
+    snprintf(buf, OLED_COL_COUNT, "CR %d", RadioNode_loraCodingRate);
     _display.drawString(8, 5, buf);
 
     snprintf(buf, OLED_COL_COUNT, "Rate: %dHz", 1000 / TX_TRANSMIT_SLOT_RATE);
     _display.drawString(0, 7, buf);
 }
-
-
-

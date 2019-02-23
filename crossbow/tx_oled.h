@@ -7,11 +7,8 @@
 #include <U8x8lib.h>
 #include "variables.h"
 #include "tactile.h"
-#include "radio_node.h"
-#include "platform_node.h"
+#include "crossbow.h"
 
-extern RadioNode radioNode;
-extern PlatformNode platformNode;
 extern RxDeviceState_t rxDeviceState;
 extern TxDeviceState_t txDeviceState;
 extern Tactile button0;

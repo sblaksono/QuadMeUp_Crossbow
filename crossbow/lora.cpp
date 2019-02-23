@@ -4,6 +4,7 @@
 */
 
 #include "lora.h"
+#include "config.h"
 
 // registers
 #define REG_FIFO                 0x00
@@ -226,7 +227,7 @@ int LoRa_parsePacket(int size)
 
 int LoRa_packetRssi()
 {
-  return (readRegister(REG_PKT_RSSI_VALUE) - (_frequency < 915000000 ? 164 : 157));
+  return (readRegister(REG_PKT_RSSI_VALUE) - (_frequency < RADIO_FREQUENCY_MIN ? 164 : 157));
 }
 
 float LoRa_packetSnr()
