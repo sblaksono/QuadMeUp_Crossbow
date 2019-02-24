@@ -9,6 +9,8 @@ License: GNU GPL v3
 #ifndef PPMREADER_H
 #define PPMREADER_H
 
+#if defined(DEVICE_MODE_TX) && defined(FEATURE_TX_INPUT_PPM)
+
 #include "Arduino.h"
 
 #define PPMREADER_PMM_CHANNEL_COUNT 10
@@ -27,5 +29,7 @@ class PPMReader
     int _pin;
     int _interrupt;
 };
+
+#endif
 
 #endif

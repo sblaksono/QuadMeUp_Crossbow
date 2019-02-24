@@ -108,7 +108,7 @@
     #define LORA_DIO0_INT_MASK          (1<<INT6)
     #define IN_E_LORA_DIO0              PIN6_bm   // pin PE6/7
     #define SET_LORA_DIO0_PIN_MODE()    DDRE &= ~(IN_E_LORA_DIO0)
-    #define LORA_DIO0_PULLUP()          PORTE |= IN_E_LORA_DIO0;
+    #define LORA_DIO0_PULLUP()          PORTE |= IN_E_LORA_DIO0
     #define ENABLE_LORA_DIO0_INT()      ENABLE_INT6(RISING)
     #define DISABLE_LORA_DIO0_INT()     DISABLE_INT6(RISING)
 
@@ -124,7 +124,7 @@
     #define PPM_INPUT_INT_MASK          (1<<INT2)
     #define IN_D_PPM_INPUT              PIN2_bm   // pin PD2/0
     #define SET_PPM_INPUT_PIN_MODE()    DDRD &= ~(IN_D_PPM_INPUT)
-    #define PPM_INPUT_PULLUP()          PORTD |= IN_D_PPM_INPUT;
+    #define PPM_INPUT_PULLUP()          PORTD |= IN_D_PPM_INPUT
     #define ENABLE_PPM_INPUT_INT()      ENABLE_INT2(CHANGE)
     #define DISABLE_PPM_INPUT_INT()     DISABLE_INT2(CHANGE)
 
@@ -140,11 +140,11 @@
     #define LORA_RST_HIGH()             PORTD |= (OUT_D_LORA_RST)
     #define LORA_RST_LOW()              PORTD &= ~(OUT_D_LORA_RST)
 
-    #define LORA_DIO0_INT0              // using INT0
+    #define LORA_DIO0_INT_VECT          INT0_vect // using INT0
     #define LORA_DIO0_INT_MASK          (1<<INT0)
     #define IN_D_LORA_DIO0              PIN3_bm   // pin PD3/3
     #define SET_LORA_DIO0_PIN_MODE()    DDRD &= ~(IN_D_LORA_DIO0)
-    #define LORA_DIO0_PULLUP()          PORTD |= IN_D_LORA_DIO0;
+    #define LORA_DIO0_PULLUP()          PORTD |= IN_D_LORA_DIO0
     #define ENABLE_LORA_DIO0_INT()      ENABLE_INT0(RISING)
     #define DISABLE_LORA_DIO0_INT()     DISABLE_INT0(RISING)
 
@@ -157,6 +157,11 @@
     #define STATUS_LED_OFF()            PORTB |= (OUT_B_STATUS_LED)
     #define IS_STATUS_LED_OFF()         (PINB & (OUT_B_STATUS_LED))
     #define STATUS_LED_TOGGLE()         { IS_STATUS_LED_OFF() ? STATUS_LED_ON() : STATUS_LED_OFF(); }
+
+    #define IN_D_BIND_BUTTON            PIN1_bm   // pin D1/2
+    #define SET_BIND_BUTTON_PIN_MODE()  DDRD &= ~(IN_D_BIND_BUTTON)
+    #define BIND_BUTTON_PULLUP()        PORTD |= IN_D_BIND_BUTTON
+    #define IS_BIND_BUTTON_LOW()        ((PIND & (IN_D_BIND_BUTTON)) == 0)
 
 #elif defined(ARDUINO_SAMD_FEATHER_M0)
 

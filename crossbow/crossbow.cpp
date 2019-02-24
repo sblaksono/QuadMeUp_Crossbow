@@ -539,7 +539,18 @@ void Crossbow_setup()
      */
     Serial1.begin(100000, SERIAL_8E2);
 
+#ifdef FEATURE_RX_BIND_BUTTON
+    SET_BIND_BUTTON_PIN_MODE();
+    BIND_BUTTON_PULLUP();
+    if (IS_BIND_BUTTON_LOW()) {
+        PlatformNode_enterBindMode();
+    }
+    else {
+        PlatformNode_leaveBindMode();
+    }
+#else    
     PlatformNode_enterBindMode();
+#endif    
     LoRa_receive(); //TODO this probably should be moved somewhere....
 #endif
 
@@ -645,10 +656,12 @@ void Crossbow_loop()
 
 #ifdef DEVICE_MODE_RX
 
+#ifndef FEATURE_RX_BIND_BUTTON
     //Make sure to leave bind mode when binding is done
     if (PlatformNode_isBindMode && millis() > bindModeExitMillis) {
         PlatformNode_leaveBindMode();
     }
+#endif
 
     /*
      * This routine handles resync of TX/RX while hoppping frequencies

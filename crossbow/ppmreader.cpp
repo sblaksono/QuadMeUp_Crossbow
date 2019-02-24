@@ -9,6 +9,8 @@ License: GNU GPL v3
 #include "ppmreader.h"
 #include "board.h"
 
+#if defined(DEVICE_MODE_TX) && defined(FEATURE_TX_INPUT_PPM)
+
 #define CPU_SPEED_MULTIPLIER (F_CPU/8000000)
 #define NO_UPDATE_THRESHOLD 500 //if no update in this number of ms, raise alarm
 
@@ -82,3 +84,5 @@ ISR(PPM_INPUT_INT_VECT)
         channel++;
     }
 }
+
+#endif
