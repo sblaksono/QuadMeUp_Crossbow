@@ -25,7 +25,7 @@
 
 #ifdef FEATURE_TX_INPUT_PPM
 
-  #include "ppm_reader.h"
+  #include "ppmreader.h"
   PPMReader txInput(true);
 
 #elif defined(FEATURE_TX_INPUT_SBUS)
@@ -534,19 +534,24 @@ void Crossbow_setup()
     pinMode(RX_ADC_PIN_2, INPUT);
     pinMode(RX_ADC_PIN_3, INPUT);
 
+#ifdef FEATURE_RX_OUTPUT_SBUS
     /*
      * Prepare Serial1 for S.Bus processing
      */
     Serial1.begin(100000, SERIAL_8E2);
+#endif
 
 #ifdef FEATURE_RX_BIND_BUTTON
     SET_BIND_BUTTON_PIN_MODE();
     BIND_BUTTON_PULLUP();
-    if (IS_BIND_BUTTON_LOW()) {
-        PlatformNode_enterBindMode();
+
+    delay(10);
+    
+    if (IS_BIND_BUTTON_HIGH()) {
+        PlatformNode_leaveBindMode();
     }
     else {
-        PlatformNode_leaveBindMode();
+        PlatformNode_enterBindMode();
     }
 #else    
     PlatformNode_enterBindMode();

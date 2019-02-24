@@ -6,6 +6,7 @@ https://quadmeup.com
 License: GNU GPL v3
 */
 
+#include "config.h"
 #include "ppmreader.h"
 #include "board.h"
 
@@ -14,7 +15,7 @@ License: GNU GPL v3
 #define CPU_SPEED_MULTIPLIER (F_CPU/8000000)
 #define NO_UPDATE_THRESHOLD 500 //if no update in this number of ms, raise alarm
 
-volatile int PPMReader::ppm[PPMREADER_PMM_CHANNEL_COUNT];
+volatile int ppm[PPMREADER_PPM_CHANNEL_COUNT];
 volatile bool ppmReaderUseTimer = false;
 volatile uint32_t lastPacketUpdate = 0; 
 
@@ -28,7 +29,7 @@ PPMReader::PPMReader(bool useTimer)
 
 void PPMReader::loop(void)
 {
-    for (int i = 0; i < PPMREADER_PMM_CHANNEL_COUNT; i++) {
+    for (int i = 0; i < PPMREADER_PPM_CHANNEL_COUNT; i++) {
       setRcChannelCallback(i, ppm[i], 0);
     }
 }
@@ -79,7 +80,7 @@ ISR(PPM_INPUT_INT_VECT)
     { //servo values between 810 and 2210 will end up here
         tmpVal = counter + pulse;
         if (tmpVal > 810 && tmpVal < 2210) {
-            PPMReader::ppm[channel] = tmpVal;
+            ppm[channel] = tmpVal;
         }
         channel++;
     }

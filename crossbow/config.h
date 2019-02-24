@@ -21,7 +21,7 @@
 #define DEVICE_MODE_RX
 
 #define FEATURE_TX_OLED
-// #define FORCE_TX_WITHOUT_INPUT
+#define FORCE_TX_WITHOUT_INPUT
 
 /*
  * Default mode of TX data input: SBUS
