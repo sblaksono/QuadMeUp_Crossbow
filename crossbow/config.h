@@ -10,8 +10,8 @@
  *
  *  Leave commented for autodetect
  */
-//#define ARDUINO_AVR_FEATHER32U4
-#define ARDUINO_PRO_MICRO
+#define ARDUINO_AVR_FEATHER32U4
+//#define ARDUINO_PRO_MICRO
 /*
  * TX or RX mode for hardware. Available types:
  * DEVICE_MODE_TX
@@ -29,8 +29,8 @@
  * FEATURE_TX_INPUT_PPM
  * FEATURE_TX_INPUT_SBUS
  */
-//#define FEATURE_TX_INPUT_PPM
-#define FEATURE_TX_INPUT_SBUS
+#define FEATURE_TX_INPUT_PPM
+//#define FEATURE_TX_INPUT_SBUS
 
 /*
  * Default mode of RX data output
@@ -58,15 +58,5 @@
 #define PPM_SIGNAL_POSITIVE_STATE 1  //set polarity of the pulses: 1 is positive, 0 is negative
 #define PPM_OUTPUT_PIN 10  //set PPM signal output pin on the arduino
 
-
-#define _RANDOM_SEED()            randomSeed(analogRead(A4))
-#define _RANDOM(A, B)             random(A, B)
-
-#define _DELAY(X)                 delay(X)
-#define _DELAYMS(X)               delayMicroseconds(X)
-#define _MILLIS()                 millis()
-#define _MICROS()                 micros()
-
-#define _CONSTRAIN(X, A, B)       ( (X) < (A) ? (A) : ( (X) > (B) ? (B) : (X) ) )
 
 #endif

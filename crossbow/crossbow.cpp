@@ -26,7 +26,7 @@
 #ifdef FEATURE_TX_INPUT_PPM
 
   #include "ppm_reader.h"
-  PPM_Reader txInput(PPM_INPUT_PIN, true);
+  PPMReader txInput(true);
 
 #elif defined(FEATURE_TX_INPUT_SBUS)
 
@@ -673,6 +673,7 @@ void Crossbow_loop()
     oled.loop();
 #endif
 
+#ifdef FEATURE_TX_INPUT_SBUS
     txInput.recoverStuckFrames();
 
     /*
@@ -687,6 +688,7 @@ void Crossbow_loop()
         txInput.restart();
         serialRestartMillis = currentMillis;
     }
+#endif
 
     handleTxDoneState(!PlatformNode_isBindMode);
 #endif

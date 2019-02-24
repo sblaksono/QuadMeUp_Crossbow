@@ -74,7 +74,7 @@ void encodeRcDataPayload(QspConfiguration_t *qsp, uint8_t noOfChannels)
 {
     for (uint8_t i = 0; i < noOfChannels; i++)
     {
-        int cV = _CONSTRAIN(qsp->rcChannelGetCallback(i), 1000, 2000) - 1000;
+        int cV = constrain(qsp->rcChannelGetCallback(i), 1000, 2000) - 1000;
 
         uint16_t channelValue10 = cV & 0x03ff;
         uint8_t channelValue8   = (cV >> 2) & 0xff;
@@ -156,7 +156,7 @@ void qspDecodeIncomingFrame(
         qspInitCrc(qsp, bindKey);
         qspClearPayload(qsp);
         receivedPayload = 0;
-        qsp->frameDecodingStartedAt = _MILLIS();
+        qsp->frameDecodingStartedAt = millis();
 
         //Frame ID and payload length
         qspComputeCrc(qsp, incomingByte);

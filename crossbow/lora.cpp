@@ -287,13 +287,8 @@ int LoRa_read()
   return LoRa_fastRead();
 }
 
-#if defined(LORA_DIO0_INT0)
-ISR(INT0_vect) {
-#elif defined(LORA_DIO0_INT1)
-ISR(INT1_vect) {
-#elif defined(LORA_DIO0_INT6)
-ISR(INT6_vect) {
-#endif
+ISR(LORA_DIO0_INT_VECT)
+{
   int irqFlags = readRegister(REG_IRQ_FLAGS);
 
   // clear IRQ's
@@ -327,9 +322,9 @@ void LoRa_onReceive(void(*callback)(int))
 
     writeRegister(REG_DIO_MAPPING_1, 0x00);
     rf_spi_using_interrupt();
-    ENABLE_LORA_INT_RISING();
+    ENABLE_LORA_DIO0_INT();
   } else {
-    DISABLE_LORA_INT();
+    DISABLE_LORA_DIO0_INT();
     rf_spi_no_interrupt();
   }
 }
@@ -486,9 +481,9 @@ int LoRa_begin(long frequency)
 
   // perform reset
   LORA_RST_LOW();
-  _DELAY(10);
+  delay(10);
   LORA_RST_HIGH();
-  _DELAY(10);
+  delay(10);
 
   // set SS high
   LORA_SS_HIGH();
