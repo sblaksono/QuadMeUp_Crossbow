@@ -163,6 +163,14 @@
     #define BIND_BUTTON_PULLUP()        PORTD |= IN_D_BIND_BUTTON
     #define IS_BIND_BUTTON_HIGH()       (PIND & (IN_D_BIND_BUTTON))
 
+    #define PPM_INPUT_INT_VECT          INT2_vect
+    #define PPM_INPUT_INT_MASK          (1<<INT2)
+    #define IN_D_PPM_INPUT              PIN2_bm   // pin PD2/0
+    #define SET_PPM_INPUT_PIN_MODE()    DDRD &= ~(IN_D_PPM_INPUT)
+    #define PPM_INPUT_PULLUP()          PORTD |= IN_D_PPM_INPUT
+    #define ENABLE_PPM_INPUT_INT()      ENABLE_INT2(CHANGE)
+    #define DISABLE_PPM_INPUT_INT()     DISABLE_INT2(CHANGE)
+
 #elif defined(ARDUINO_SAMD_FEATHER_M0)
 
     #define LORA_SS_PIN     8

@@ -21,7 +21,7 @@
 #define DEVICE_MODE_RX
 
 #define FEATURE_TX_OLED
-#define FORCE_TX_WITHOUT_INPUT
+//#define FORCE_TX_WITHOUT_INPUT
 
 /*
  * Default mode of TX data input: SBUS
@@ -57,11 +57,11 @@
 #define RADIO_CHANNEL_COUNT ((RADIO_FREQUENCY_RANGE/RADIO_CHANNEL_WIDTH) + 1)
 #define RADIO_HOP_OFFSET 5
 
-#define PPM_FRAME_LENGTH 30500  //set the PPM frame length in microseconds (1ms = 1000µs)
-#define PPM_PULSE_LENGTH 300  //set the pulse length
-#define PPM_OUTPUT_MULTIPLIER 1 //1 for 8MHz RX, 2 for 16MHz RX
-#define PPM_SIGNAL_POSITIVE_STATE 1  //set polarity of the pulses: 1 is positive, 0 is negative
-#define PPM_OUTPUT_PIN 10  //set PPM signal output pin on the arduino
+//#define PPM_FRAME_LENGTH 30500  //set the PPM frame length in microseconds (1ms = 1000µs)
+//#define PPM_PULSE_LENGTH 300  //set the pulse length
+//#define PPM_OUTPUT_MULTIPLIER 1 //1 for 8MHz RX, 2 for 16MHz RX
+//#define PPM_SIGNAL_POSITIVE_STATE 1  //set polarity of the pulses: 1 is positive, 0 is negative
+//#define PPM_OUTPUT_PIN 10  //set PPM signal output pin on the arduino
 
 
 #endif
