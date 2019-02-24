@@ -35,7 +35,7 @@
 /*
  * Default mode of RX data output
  */
-//#define FEATURE_RX_OUTPUT_SBUS
+#define FEATURE_RX_OUTPUT_SBUS
 //#define FEATURE_RX_OUTPUT_PPM
 
 //#define DEBUG_SERIAL

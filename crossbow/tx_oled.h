@@ -1,7 +1,9 @@
-#pragma once
-
 #ifndef TX_OLED_H
 #define TX_OLED_H
+
+#include "config.h"
+
+#ifdef DEVICE_MODE_TX
 
 #include "Wire.h"
 #include <U8x8lib.h>
@@ -48,5 +50,7 @@ class TxOled {
         uint8_t _page = TX_PAGE_NONE;
         uint8_t _mainPageSequenceIndex = 0;
 };
+
+#endif
 
 #endif

@@ -5,7 +5,7 @@
 
 #include "config.h"
 
-#ifdef FEATURE_TX_INPUT_SBUS
+#if defined(DEVICE_MODE_TX) && defined(FEATURE_TX_INPUT_SBUS)
 
 #include "tx_input.h"
 

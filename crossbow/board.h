@@ -76,11 +76,11 @@
     #define BUTTON_0_PIN    9
     #define BUTTON_1_PIN    10
 
-    #define OUT_D_STATUS_LED            PIN5_bm   // pin D5/30 - TX LED
-    #define SET_STATUS_LED_PIN_MODE()   DDRD |= (OUT_D_STATUS_LED)
-    #define STATUS_LED_ON()            PORTD &= ~(OUT_D_STATUS_LED)
-    #define STATUS_LED_OFF()             PORTD |= (OUT_D_STATUS_LED)
-    #define IS_STATUS_LED_OFF()          (PIND & (OUT_D_STATUS_LED))
+    #define OUT_B_STATUS_LED            PIN0_bm   // pin B0/17 - RX LED
+    #define SET_STATUS_LED_PIN_MODE()   DDRB |= (OUT_B_STATUS_LED)
+    #define STATUS_LED_ON()             PORTB &= ~(OUT_B_STATUS_LED)
+    #define STATUS_LED_OFF()            PORTB |= (OUT_B_STATUS_LED)
+    #define IS_STATUS_LED_OFF()         (PINB & (OUT_B_STATUS_LED))
     #define STATUS_LED_TOGGLE()         { IS_STATUS_LED_OFF() ? STATUS_LED_ON() : STATUS_LED_OFF(); }
 
 #elif defined(ARDUINO_SAMD_FEATHER_M0)

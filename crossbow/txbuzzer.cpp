@@ -1,3 +1,7 @@
+#include "config.h"
+
+#ifdef DEVICE_MODE_TX
+
 #include <Arduino.h>
 
 #include "txbuzzer.h"
@@ -65,3 +69,5 @@ void buzzerProcess(uint8_t pin, uint32_t timestamp, BuzzerState_t *buzzer)
         buzzer->updateTime = timestamp + buzzer->patternTickPerdiod;
     }
 };
+
+#endif

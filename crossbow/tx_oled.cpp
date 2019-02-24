@@ -1,3 +1,7 @@
+#include "config.h"
+
+#ifdef DEVICE_MODE_TX
+
 #include "tx_oled.h"
 
 #define OLED_COL_COUNT 16
@@ -169,3 +173,5 @@ void TxOled::renderPageInit() {
     snprintf(buf, OLED_COL_COUNT, "Rate: %dHz", 1000 / TX_TRANSMIT_SLOT_RATE);
     _display.drawString(0, 7, buf);
 }
+
+#endif

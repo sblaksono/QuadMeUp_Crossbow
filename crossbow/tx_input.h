@@ -1,6 +1,9 @@
-
 #ifndef TX_INPUT_H
 #define TX_INPUT_H
+
+#include "config.h"
+
+#ifdef DEVICE_MODE_TX
 
 #include "Arduino.h"
 
@@ -15,5 +18,7 @@ class TxInput
     virtual bool isReceiving(void) { return false; };
     virtual void loop(void) {};
 };
+
+#endif
 
 #endif

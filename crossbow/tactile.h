@@ -1,7 +1,9 @@
-#pragma once
-
 #ifndef TACTILE_H
 #define TACTILE_H
+
+#include "config.h"
+
+#ifdef DEVICE_MODE_TX
 
 #include "Arduino.h"
 
@@ -26,5 +28,7 @@ class Tactile {
     uint32_t _pressMillis = 0;
     uint8_t _state = TACTILE_STATE_NONE;
 };
+
+#endif
 
 #endif

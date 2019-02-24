@@ -77,7 +77,7 @@ void sbusPreparePacket(uint8_t packet[], bool isSignalLoss, bool isFailsafe, int
     packet[24] = SBUS_FRAME_FOOTER; //Footer
 }
 
-#ifdef FEATURE_TX_INPUT_SBUS
+#if defined(DEVICE_MODE_TX) && defined(FEATURE_TX_INPUT_SBUS)
 
 SbusInput::SbusInput(HardwareSerial &serial) : _serial(serial)
 {

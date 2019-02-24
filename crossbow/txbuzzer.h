@@ -1,6 +1,10 @@
 #ifndef TXBUZZER_H
 #define TXBUZZER_H
 
+#include "config.h"
+
+#ifdef DEVICE_MODE_TX
+
 #include <stdint.h>
 
 #define PATTERN_CYCLE_OFF 127
@@ -45,5 +49,7 @@ struct BuzzerState_t {
 void buzzerSingleMode(uint8_t mode, BuzzerState_t *buzzer);
 void buzzerContinousMode(uint8_t mode, BuzzerState_t *buzzer);
 void buzzerProcess(uint8_t pin, uint32_t timestamp, BuzzerState_t *buzzer);
+
+#endif
 
 #endif

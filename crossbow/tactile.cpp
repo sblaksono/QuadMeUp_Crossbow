@@ -1,3 +1,7 @@
+#include "config.h"
+
+#ifdef DEVICE_MODE_TX
+
 #include "Arduino.h"
 #include "tactile.h"
 
@@ -40,3 +44,5 @@ void Tactile::start(void) {
 uint8_t Tactile::getState(void) {
     return _state;
 }
+
+#endif
