@@ -47,6 +47,7 @@ extern bool PlatformNode_isBindMode;
 
 void Crossbow_setup();
 void Crossbow_loop();
+void Crossbow_updateLeds();
 
 //extern RadioNode radioNode;
 //extern PlatformNode platformNode;

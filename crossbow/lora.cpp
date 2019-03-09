@@ -68,14 +68,14 @@ uint8_t singleTransfer(uint8_t address, uint8_t value)
 {
   uint8_t response;
 
-  LORA_SS_LOW();
+  RF_CS_LORA_ACTIVE();
 
   rf_spi_transaction_begin();
   rf_spi_xfer(address);
   response = rf_spi_xfer(value);
   rf_spi_transaction_end();
 
-  LORA_SS_HIGH();
+  RF_CS_LORA_INACTIVE();
 
   return response;
 }
@@ -93,14 +93,14 @@ void writeRegister(uint8_t address, uint8_t value)
 void bufferTransfer(uint8_t address, uint8_t buffer[], uint8_t size) {
   uint8_t response;
 
-  LORA_SS_LOW();
+  RF_CS_LORA_ACTIVE();
 
   rf_spi_transaction_begin();
   rf_spi_xfer(address);
   rf_spi_buffer_xfer(buffer, size);
   rf_spi_transaction_end();
 
-  LORA_SS_HIGH();
+  RF_CS_LORA_INACTIVE();
 }
 
 void writeRegister(uint8_t address, uint8_t buffer[], uint8_t size)
@@ -486,7 +486,7 @@ int LoRa_begin(long frequency)
   delay(10);
 
   // set SS high
-  LORA_SS_HIGH();
+  RF_CS_LORA_INACTIVE();
 
   // start SPI
   rf_spi_enable_master_mode();

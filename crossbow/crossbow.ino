@@ -24,7 +24,6 @@ void loop(void)
 {
 
     Crossbow_loop();
+    Crossbow_updateLeds();
 
 }
-
-

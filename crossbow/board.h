@@ -96,8 +96,8 @@
 
     #define OUT_B_LORA_SS               PIN4_bm   // pin PB4/8
     #define SET_LORA_SS_PIN_MODE()      DDRB |= (OUT_B_LORA_SS)
-    #define LORA_SS_HIGH()              PORTB |= (OUT_B_LORA_SS)
-    #define LORA_SS_LOW()               PORTB &= ~(OUT_B_LORA_SS)
+    #define RF_CS_LORA_INACTIVE()       PORTB |= (OUT_B_LORA_SS)
+    #define RF_CS_LORA_ACTIVE()         PORTB &= ~(OUT_B_LORA_SS)
 
     #define OUT_D_LORA_RST              PIN4_bm   // pin PD4/4
     #define SET_LORA_RST_PIN_MODE()     DDRD |= (OUT_D_LORA_RST)
@@ -120,6 +120,8 @@
     #define STATUS_LED_OFF()            digitalWrite(LED_BUILTIN, LOW)
     #define STATUS_LED_TOGGLE()         digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN))
 
+    #define INIT_LEDS()                 { SET_STATUS_LED_PIN_MODE(); STATUS_LED_OFF(); }
+
     #define PPM_INPUT_INT_VECT          INT2_vect
     #define PPM_INPUT_INT_MASK          (1<<INT2)
     #define IN_D_PPM_INPUT              PIN2_bm   // pin PD2/0
@@ -132,8 +134,8 @@
 
     #define OUT_B_LORA_SS               PIN6_bm   // pin PB6/10
     #define SET_LORA_SS_PIN_MODE()      DDRB |= (OUT_B_LORA_SS)
-    #define LORA_SS_HIGH()              PORTB |= (OUT_B_LORA_SS)
-    #define LORA_SS_LOW()               PORTB &= ~(OUT_B_LORA_SS)
+    #define RF_CS_LORA_INACTIVE()       PORTB |= (OUT_B_LORA_SS)
+    #define RF_CS_LORA_ACTIVE()         PORTB &= ~(OUT_B_LORA_SS)
 
     #define OUT_D_LORA_RST              PIN4_bm   // pin PD4/4
     #define SET_LORA_RST_PIN_MODE()     DDRD |= (OUT_D_LORA_RST)
@@ -151,12 +153,28 @@
     #define BUTTON_0_PIN    9
     #define BUTTON_1_PIN    10
 
+    #ifdef DEVICE_MODE_TX
+
+    #define OUT_D_STATUS_LED            PIN5_bm   // pin D5/30 - TX LED
+    #define SET_STATUS_LED_PIN_MODE()   DDRD |= (OUT_D_STATUS_LED)
+    #define STATUS_LED_ON()            PORTD &= ~(OUT_D_STATUS_LED)
+    #define STATUS_LED_OFF()             PORTD |= (OUT_D_STATUS_LED)
+    #define IS_STATUS_LED_OFF()          (PIND & (OUT_D_STATUS_LED))
+
+    #endif
+
+    #ifdef DEVICE_MODE_RX
+    
     #define OUT_B_STATUS_LED            PIN0_bm   // pin PB0/17 - RX LED
     #define SET_STATUS_LED_PIN_MODE()   DDRB |= (OUT_B_STATUS_LED)
     #define STATUS_LED_ON()             PORTB &= ~(OUT_B_STATUS_LED)
     #define STATUS_LED_OFF()            PORTB |= (OUT_B_STATUS_LED)
     #define IS_STATUS_LED_OFF()         (PINB & (OUT_B_STATUS_LED))
+
+    #endif
+
     #define STATUS_LED_TOGGLE()         { IS_STATUS_LED_OFF() ? STATUS_LED_ON() : STATUS_LED_OFF(); }
+    #define INIT_LEDS()                 { SET_STATUS_LED_PIN_MODE(); STATUS_LED_OFF(); }
 
     #define IN_D_BIND_BUTTON            PIN1_bm   // pin PD1/2
     #define SET_BIND_BUTTON_PIN_MODE()  DDRD &= ~(IN_D_BIND_BUTTON)

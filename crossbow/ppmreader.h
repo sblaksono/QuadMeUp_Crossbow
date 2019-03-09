@@ -14,10 +14,11 @@ License: GNU GPL v3
 #if defined(DEVICE_MODE_TX) && defined(FEATURE_TX_INPUT_PPM)
 
 #include "Arduino.h"
+#include "tx_input.h"
 
 #define PPMREADER_PPM_CHANNEL_COUNT 10
 
-class PPMReader
+class PPMReader : public TxInput
 {
   public:
     PPMReader(bool useTimer);

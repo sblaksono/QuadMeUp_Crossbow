@@ -24,7 +24,7 @@ PPMReader::PPMReader(bool useTimer)
     ppmReaderUseTimer = useTimer;
 
     SET_PPM_INPUT_PIN_MODE();
-    ENABLE_PPM_INPUT_INT();
+    PPM_INPUT_PULLUP();
 }
 
 void PPMReader::loop(void)

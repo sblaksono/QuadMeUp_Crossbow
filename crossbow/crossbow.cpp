@@ -26,7 +26,7 @@
 #ifdef FEATURE_TX_INPUT_PPM
 
   #include "ppmreader.h"
-  PPMReader txInput(true);
+  PPMReader txInput(false);
 
 #elif defined(FEATURE_TX_INPUT_SBUS)
 
@@ -44,12 +44,10 @@ BuzzerState_t buzzer;
 #ifdef FEATURE_TX_OLED
 #include "tx_oled.h"
 TxOled oled;
-#endif
-
 #include "tactile.h"
-
 Tactile button0(BUTTON_0_PIN);
 Tactile button1(BUTTON_1_PIN);
+#endif
 
 #endif
 
@@ -102,6 +100,7 @@ uint32_t nextLedUpdate = 0;
 uint8_t PlatformNode_platformState = DEVICE_STATE_UNDETERMINED;
 bool PlatformNode_isBindMode = false;
 uint32_t bindModeExitMillis;
+uint32_t bindModeChangeMillis;
 
 volatile int _channels[PLATFORM_TOTAL_CHANNEL_COUNT];
 
@@ -528,6 +527,12 @@ void Crossbow_setup()
 
     RadioNode_init(Crossbow_onReceive);
 
+#ifdef FEATURE_BIND_BUTTON
+    SET_BIND_BUTTON_PIN_MODE();
+    BIND_BUTTON_PULLUP();
+    delay(10);
+#endif
+
 #ifdef DEVICE_MODE_RX
 
     pinMode(RX_ADC_PIN_1, INPUT);
@@ -541,12 +546,7 @@ void Crossbow_setup()
     Serial1.begin(100000, SERIAL_8E2);
 #endif
 
-#ifdef FEATURE_RX_BIND_BUTTON
-    SET_BIND_BUTTON_PIN_MODE();
-    BIND_BUTTON_PULLUP();
-
-    delay(10);
-    
+#ifdef FEATURE_BIND_BUTTON
     if (IS_BIND_BUTTON_HIGH()) {
         PlatformNode_leaveBindMode();
     }
@@ -567,6 +567,11 @@ void Crossbow_setup()
 #ifdef FEATURE_TX_OLED
     oled.init();
     oled.page(TX_PAGE_INIT);
+    /*
+     * Buttons on TX module
+     */
+    button0.start();
+    button1.start();
 #endif
 
     /*
@@ -574,28 +579,23 @@ void Crossbow_setup()
      */
     canTransmit = true;
 
+#ifdef FEATURE_TX_BUZZER
     pinMode(TX_BUZZER_PIN, OUTPUT);
 
     //Play single tune to indicate power up
     buzzerSingleMode(BUZZER_MODE_CHIRP, &buzzer);
+#endif
 
     /*
      * Prepare Serial1 for S.Bus processing
      */
     txInput.start();
 
-    /*
-     * Buttons on TX module
-     */
-    button0.start();
-    button1.start();
-
     loadBindKey(bindKey);
 
 #endif
 
-    SET_STATUS_LED_PIN_MODE();
-
+    INIT_LEDS();
 
 }
 
@@ -661,7 +661,7 @@ void Crossbow_loop()
 
 #ifdef DEVICE_MODE_RX
 
-#ifndef FEATURE_RX_BIND_BUTTON
+#ifndef FEATURE_BIND_BUTTON
     //Make sure to leave bind mode when binding is done
     if (PlatformNode_isBindMode && millis() > bindModeExitMillis) {
         PlatformNode_leaveBindMode();
@@ -683,11 +683,28 @@ void Crossbow_loop()
     handleTxDoneState(false);
 #else
 
+#ifdef FEATURE_BIND_BUTTON
+    if (IS_BIND_BUTTON_HIGH()) {
+        bindModeChangeMillis = millis() + 3000;      
+    }
+    else {
+        if (millis() > bindModeChangeMillis) {
+            if (PlatformNode_isBindMode) {
+                PlatformNode_leaveBindMode();
+            }
+            else {
+                PlatformNode_enterBindMode();
+            }
+            bindModeChangeMillis = millis() + 3000;      
+        }      
+    }
+#endif
+
+#ifdef FEATURE_TX_OLED
     //Process buttons
     button0.loop();
     button1.loop();
 
-#ifdef FEATURE_TX_OLED
     oled.loop();
 #endif
 
@@ -839,7 +856,6 @@ void Crossbow_loop()
 #ifdef FEATURE_RX_OUTPUT_SBUS
     if (currentMillis > sbusTime) {
         setRcChannel(RSSI_CHANNEL - 1, rxDeviceState.indicatedRssi, 0);
-
         sbusPreparePacket(sbusPacket, false, (PlatformNode_platformState == DEVICE_STATE_FAILSAFE), getRcChannel);
         Serial1.write(sbusPacket, SBUS_PACKET_LENGTH);
         sbusTime = currentMillis + SBUS_UPDATE_RATE;
@@ -863,13 +879,17 @@ void Crossbow_loop()
 
 #ifdef DEVICE_MODE_TX
 
+#ifdef FEATURE_TX_BUZZER
     buzzerProcess(TX_BUZZER_PIN, currentMillis, &buzzer);
+#endif
 
     // This routing enables when TX starts to receive signal from RX for a first time or after
     // failsafe
     if (txDeviceState.isReceiving == false && qsp.anyFrameRecivedAt != 0) {
         //TX module started to receive data
+#ifdef FEATURE_TX_BUZZER
         buzzerSingleMode(BUZZER_MODE_DOUBLE_CHIRP, &buzzer);
+#endif
         txDeviceState.isReceiving = true;
         PlatformNode_platformState = DEVICE_STATE_OK;
     }
@@ -893,6 +913,7 @@ void Crossbow_loop()
 
     //FIXME rxDeviceState should be resetted also in RC_HEALT frame is not received in a long period
 
+#ifdef FEATURE_TX_BUZZER
     //Handle audible alarms
     if (PlatformNode_platformState == DEVICE_STATE_FAILSAFE) {
         //Failsafe detected by TX
@@ -907,32 +928,43 @@ void Crossbow_loop()
     } else {
         buzzerContinousMode(BUZZER_MODE_OFF, &buzzer);
     }
+#endif
 
 #endif
+
+}
+
+
+void Crossbow_updateLeds()
+{
+    uint32_t currentMillis = millis();
 
     /*
      * Handle LED updates
      */
     if (nextLedUpdate < currentMillis) {
 #ifdef DEVICE_MODE_TX
-        if (txDeviceState.isReceiving) {
+        if (PlatformNode_isBindMode) {
+            nextLedUpdate = currentMillis + 50;
             STATUS_LED_TOGGLE();
-            nextLedUpdate = currentMillis + 300;
-        } else if (txInput.isReceiving()) {
-            STATUS_LED_TOGGLE();
-            nextLedUpdate = currentMillis + 100;
         } else {
-            STATUS_LED_ON();
-            nextLedUpdate = currentMillis + 200;
+            if (txDeviceState.isReceiving) {
+                STATUS_LED_TOGGLE();
+                nextLedUpdate = currentMillis + 300;
+            } else if (txInput.isReceiving()) {
+                STATUS_LED_TOGGLE();
+                nextLedUpdate = currentMillis + 100;
+            } else {
+                STATUS_LED_ON();
+                nextLedUpdate = currentMillis + 200;
+            }
         }
 #else
-
         if (PlatformNode_isBindMode) {
             nextLedUpdate = currentMillis + 50;
             STATUS_LED_TOGGLE();
         } else {
             nextLedUpdate = currentMillis + 200;
-
             if (PlatformNode_platformState == DEVICE_STATE_FAILSAFE) {
                 STATUS_LED_ON();
             } else {
