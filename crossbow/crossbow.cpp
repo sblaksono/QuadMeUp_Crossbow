@@ -31,7 +31,7 @@
 #elif defined(FEATURE_TX_INPUT_SBUS)
 
   #include "sbus.h"
-  SbusInput txInput(Serial1);
+  SbusInput txInput(SBUS_SERIAL);
 
 #else
   #error please select tx input source
@@ -70,7 +70,7 @@ uint32_t lastRxStateTaskTime = 0;
 #endif
 
 
-#if defined(ARDUINO_AVR_FEATHER32U4) || defined(ARDUINO_PRO_MICRO)
+#if defined(ARDUINO_AVR_FEATHER32U4) || defined(ARDUINO_PRO_MICRO) || defined(ARDUINO_PRO_MINI)
 #include <EEPROM.h>
 #elif defined(ARDUINO_SAMD_FEATHER_M0)
 // Include EEPROM-like API for FlashStorage
@@ -543,7 +543,7 @@ void Crossbow_setup()
     /*
      * Prepare Serial1 for S.Bus processing
      */
-    Serial1.begin(100000, SERIAL_8E2);
+    SBUS_SERIAL_BEGIN(100000, SERIAL_8E2);
 #endif
 
 #ifdef FEATURE_BIND_BUTTON
@@ -857,7 +857,7 @@ void Crossbow_loop()
     if (currentMillis > sbusTime) {
         setRcChannel(RSSI_CHANNEL - 1, rxDeviceState.indicatedRssi, 0);
         sbusPreparePacket(sbusPacket, false, (PlatformNode_platformState == DEVICE_STATE_FAILSAFE), getRcChannel);
-        Serial1.write(sbusPacket, SBUS_PACKET_LENGTH);
+        SBUS_SERIAL_WRITE(sbusPacket, SBUS_PACKET_LENGTH);
         sbusTime = currentMillis + SBUS_UPDATE_RATE;
     }
 #endif

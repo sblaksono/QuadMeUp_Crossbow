@@ -63,6 +63,11 @@
   #define SET_RF_MOSI_IS_OUTPUT()     DDRB |= (OUT_B_RF_MOSI)
   #define IS_RF_MOSI_ON               (PINB & (OUT_B_RF_MOSI))
 
+  #define ENABLE_INT0(MODE)           { EICRA = (EICRA & ~((1<<ISC00) | (1<<ISC01))) | (MODE << ISC00); EIMSK |= (1<<INT0); }
+  #define DISABLE_INT0(MODE)          { EIMSK &= ~(1<<INT0); }
+  #define ENABLE_INT1(MODE)           { EICRA = (EICRA & ~((1<<ISC10) | (1<<ISC11))) | (MODE << ISC10); EIMSK |= (1<<INT1); }
+  #define DISABLE_INT1(MODE)          { EIMSK &= ~(1<<INT1); }
+
 // 32U4
 #elif defined(__AVR_ATmega32U4__)
 
@@ -130,6 +135,10 @@
     #define ENABLE_PPM_INPUT_INT()      ENABLE_INT2(CHANGE)
     #define DISABLE_PPM_INPUT_INT()     DISABLE_INT2(CHANGE)
 
+    #define SBUS_SERIAL                 Serial1
+    #define SBUS_SERIAL_BEGIN(A, B)     Serial1.begin(A, B)
+    #define SBUS_SERIAL_WRITE(A, B)     Serial1.write(A, B)
+
 #elif defined(ARDUINO_PRO_MICRO)
 
     #define OUT_B_LORA_SS               PIN6_bm   // pin PB6/10
@@ -150,9 +159,6 @@
     #define ENABLE_LORA_DIO0_INT()      ENABLE_INT0(RISING)
     #define DISABLE_LORA_DIO0_INT()     DISABLE_INT0(RISING)
 
-    #define BUTTON_0_PIN    9
-    #define BUTTON_1_PIN    10
-
     #ifdef DEVICE_MODE_TX
 
     #define OUT_D_STATUS_LED            PIN5_bm   // pin D5/30 - TX LED
@@ -164,7 +170,7 @@
     #endif
 
     #ifdef DEVICE_MODE_RX
-    
+
     #define OUT_B_STATUS_LED            PIN0_bm   // pin PB0/17 - RX LED
     #define SET_STATUS_LED_PIN_MODE()   DDRB |= (OUT_B_STATUS_LED)
     #define STATUS_LED_ON()             PORTB &= ~(OUT_B_STATUS_LED)
@@ -189,14 +195,55 @@
     #define ENABLE_PPM_INPUT_INT()      ENABLE_INT2(CHANGE)
     #define DISABLE_PPM_INPUT_INT()     DISABLE_INT2(CHANGE)
 
-#elif defined(ARDUINO_SAMD_FEATHER_M0)
+    #define SBUS_SERIAL                 Serial1
+    #define SBUS_SERIAL_BEGIN(A, B)     Serial1.begin(A, B)
+    #define SBUS_SERIAL_WRITE(A, B)     Serial1.write(A, B)
 
-    #define LORA_SS_PIN     8
-    #define LORA_RST_PIN    4
-    #define LORA_DI0_PIN    3
+#elif defined(ARDUINO_PRO_MINI)
 
-    #define BUTTON_0_PIN    9 //Please verify
-    #define BUTTON_1_PIN    10 //Please verify
+    #define OUT_B_LORA_SS               PIN2_bm   // pin PB2/10
+    #define SET_LORA_SS_PIN_MODE()      DDRB |= (OUT_B_LORA_SS)
+    #define RF_CS_LORA_INACTIVE()       PORTB |= (OUT_B_LORA_SS)
+    #define RF_CS_LORA_ACTIVE()         PORTB &= ~(OUT_B_LORA_SS)
+
+    #define OUT_D_LORA_RST              PIN4_bm   // pin PD4/4
+    #define SET_LORA_RST_PIN_MODE()     DDRD |= (OUT_D_LORA_RST)
+    #define LORA_RST_HIGH()             PORTD |= (OUT_D_LORA_RST)
+    #define LORA_RST_LOW()              PORTD &= ~(OUT_D_LORA_RST)
+
+    #define LORA_DIO0_INT_VECT          INT1_vect // using INT1
+    #define LORA_DIO0_INT_MASK          (1<<INT1)
+    #define IN_D_LORA_DIO0              PIN3_bm   // pin PD3/3
+    #define SET_LORA_DIO0_PIN_MODE()    DDRD &= ~(IN_D_LORA_DIO0)
+    #define LORA_DIO0_PULLUP()          PORTD |= IN_D_LORA_DIO0
+    #define ENABLE_LORA_DIO0_INT()      ENABLE_INT1(RISING)
+    #define DISABLE_LORA_DIO0_INT()     DISABLE_INT1(RISING)
+
+    #define OUT_D_STATUS_LED            PIN7_bm   // pin D7/7
+    #define SET_STATUS_LED_PIN_MODE()   DDRD |= (OUT_D_STATUS_LED)
+    #define STATUS_LED_ON()             PORTD |= (OUT_D_STATUS_LED)
+    #define STATUS_LED_OFF()            PORTD &= ~(OUT_D_STATUS_LED)
+    #define IS_STATUS_LED_ON()          (PIND & (OUT_D_STATUS_LED))
+
+    #define STATUS_LED_TOGGLE()         { IS_STATUS_LED_ON() ? STATUS_LED_OFF() : STATUS_LED_ON(); }
+    #define INIT_LEDS()                 { SET_STATUS_LED_PIN_MODE(); STATUS_LED_OFF(); }
+
+    #define IN_C_BIND_BUTTON            PIN3_bm   // pin PC3/A3
+    #define SET_BIND_BUTTON_PIN_MODE()  DDRC &= ~(IN_C_BIND_BUTTON)
+    #define BIND_BUTTON_PULLUP()        PORTC |= IN_C_BIND_BUTTON
+    #define IS_BIND_BUTTON_HIGH()       (PINC & (IN_C_BIND_BUTTON))
+
+    #define PPM_INPUT_INT_VECT          INT0_vect
+    #define PPM_INPUT_INT_MASK          (1<<INT0)
+    #define IN_D_PPM_INPUT              PIN2_bm   // pin PD2/2
+    #define SET_PPM_INPUT_PIN_MODE()    DDRD &= ~(IN_D_PPM_INPUT)
+    #define PPM_INPUT_PULLUP()          PORTD |= IN_D_PPM_INPUT
+    #define ENABLE_PPM_INPUT_INT()      ENABLE_INT0(CHANGE)
+    #define DISABLE_PPM_INPUT_INT()     DISABLE_INT0(CHANGE)
+
+    #define SBUS_SERIAL                 Serial
+    #define SBUS_SERIAL_BEGIN(A, B)     Serial.begin(A, B)
+    #define SBUS_SERIAL_WRITE(A, B)     Serial.write(A, B)
 
 #else
     #error please select hardware

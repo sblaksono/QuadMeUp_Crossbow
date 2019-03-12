@@ -6,12 +6,14 @@
 /*
  *  Hardware type. Available types:
  *  ARDUINO_AVR_FEATHER32U4
- *  ARDUINO_SAMD_FEATHER_M0
+ *  ARDUINO_PRO_MICRO
+ *  ARDUINO_PRO_MINI
  *
  *  Leave commented for autodetect
  */
 //#define ARDUINO_AVR_FEATHER32U4
-#define ARDUINO_PRO_MICRO
+//#define ARDUINO_PRO_MICRO
+#define ARDUINO_PRO_MINI
 /*
  * TX or RX mode for hardware. Available types:
  * DEVICE_MODE_TX
@@ -44,7 +46,7 @@
 #define FEATURE_BIND_BUTTON
 //#define FEATURE_TX_BUZZER
 
-#define DEBUG_SERIAL
+//#define DEBUG_SERIAL
 // #define DEBUG_PING_PONG
 // #define DEBUG_LED
 
