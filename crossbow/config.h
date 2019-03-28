@@ -12,8 +12,8 @@
  *  Leave commented for autodetect
  */
 //#define ARDUINO_AVR_FEATHER32U4
-//#define ARDUINO_PRO_MICRO
-#define ARDUINO_PRO_MINI
+#define ARDUINO_PRO_MICRO
+//#define ARDUINO_PRO_MINI
 /*
  * TX or RX mode for hardware. Available types:
  * DEVICE_MODE_TX
@@ -37,8 +37,9 @@
 /*
  * Default mode of RX data output
  */
-#define FEATURE_RX_OUTPUT_SBUS
+//#define FEATURE_RX_OUTPUT_SBUS
 //#define FEATURE_RX_OUTPUT_PPM
+#define FEATURE_RX_OUTPUT_JOYSTICK
 
 /*
  * Other features

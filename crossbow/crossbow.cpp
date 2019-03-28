@@ -65,6 +65,12 @@ uint8_t sbusPacket[SBUS_PACKET_LENGTH] = {0};
 
 #endif
 
+#ifdef FEATURE_RX_OUTPUT_JOYSTICK
+
+#include "joystick.h"
+
+#endif
+
 uint32_t lastRxStateTaskTime = 0;
 
 #endif
@@ -546,6 +552,12 @@ void Crossbow_setup()
     SBUS_SERIAL_BEGIN(100000, SERIAL_8E2);
 #endif
 
+#ifdef FEATURE_RX_OUTPUT_JOYSTICK
+
+    setupJoystick();
+
+#endif
+
 #ifdef FEATURE_BIND_BUTTON
     if (IS_BIND_BUTTON_HIGH()) {
         PlatformNode_leaveBindMode();
@@ -553,9 +565,9 @@ void Crossbow_setup()
     else {
         PlatformNode_enterBindMode();
     }
-#else    
+#else
     PlatformNode_enterBindMode();
-#endif    
+#endif
     LoRa_receive(); //TODO this probably should be moved somewhere....
 #endif
 
@@ -685,7 +697,7 @@ void Crossbow_loop()
 
 #ifdef FEATURE_BIND_BUTTON
     if (IS_BIND_BUTTON_HIGH()) {
-        bindModeChangeMillis = millis() + 3000;      
+        bindModeChangeMillis = millis() + 3000;
     }
     else {
         if (millis() > bindModeChangeMillis) {
@@ -695,8 +707,8 @@ void Crossbow_loop()
             else {
                 PlatformNode_enterBindMode();
             }
-            bindModeChangeMillis = millis() + 3000;      
-        }      
+            bindModeChangeMillis = millis() + 3000;
+        }
     }
 #endif
 
@@ -861,6 +873,13 @@ void Crossbow_loop()
         sbusTime = currentMillis + SBUS_UPDATE_RATE;
     }
 #endif
+
+#ifdef FEATURE_RX_OUTPUT_JOYSTICK
+
+    processJoystick(getRcChannel);
+
+#endif
+
 
     if (qsp.lastFrameReceivedAt[QSP_FRAME_RC_DATA] + RX_FAILSAFE_DELAY < currentMillis) {
         PlatformNode_platformState = DEVICE_STATE_FAILSAFE;
